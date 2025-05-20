@@ -4,12 +4,12 @@ from pymatgen.core.structure import Structure
 from pymatgen.analysis.bond_valence import BVAnalyzer
 
 # === CONFIG ===
+#need to modify :D
 BERTOS_DIR = r"C:\Users\95224\Documents\GitHub\BERTOS"
 BERTOS_MODEL = os.path.join(BERTOS_DIR, "trained_models", "ICSD_CN")
 GET_OS_SCRIPT = os.path.join(BERTOS_DIR, "getOS.py")
 CIF_PATH = r"C:\Users\95224\Neutron Project\Datasets\Cif\mp-186.cif"
 
-from pymatgen.core import Structure
 
 def bertos_predict(cif_path):
     try:

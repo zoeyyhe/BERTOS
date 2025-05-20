@@ -1,3 +1,68 @@
+import sys
+import os
+import argparse
+import pandas as pd
+from pymatgen.core.composition import Composition
+
+# Add model folder to path so we can import guess_os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "BERTOS")))
+from bertos import guess_os
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="Predict oxidation states using BERTOS")
+    parser.add_argument("--i", type=str, help="Input formula")
+    parser.add_argument("--f", type=str, help="CSV file with formulas (one per row)")
+    #✅ Accept this extra argument so subprocess won't fail
+    parser.add_argument(
+        "--model_name_or_path",
+        type=str,
+        default=None,
+        help="(Unused) Included to support external CLI calls."
+    )
+    return parser.parse_args()
+
+
+def main():
+    args = parse_args()
+
+    if args.i and args.f:
+        print("❌ Please provide only one of --i (formula) or --f (CSV file), not both.")
+        return
+
+    if args.i:
+        formula = args.i.strip()
+        print(f"Input formula -------> {formula}")
+        os_result = guess_os(formula)
+        print("Predicted Oxidation States:")
+        for elem, ox in os_result.items():
+            print(f"{elem}: {ox}")
+
+    elif args.f:
+        print(f"Input file -------> {args.f}")
+        df = pd.read_csv(args.f, header=None)
+        formulas = df[0]
+        all_results = []
+
+        for formula in formulas:
+            os_result = guess_os(formula)
+            formatted = " ".join(f"{k}({v:+})" for k, v in os_result.items())
+            all_results.append(formatted)
+
+        out_file = ".".join(args.f.split(".")[:-1]) + "_OS." + args.f.split(".")[-1]
+        pd.DataFrame(all_results).to_csv(out_file, header=None, index=None)
+        print(f"Output file ------> {out_file}")
+
+    else:
+        print("❗ Please provide a formula (--i) or a CSV file (--f) as input.")
+
+
+if __name__ == "__main__":
+    main()
+
+'''Below are the original getOS but the issues with fixing directories and paths issues are too complicated,
+so I made the above version for direct use.'''
+
 # # for a formula: python getOS.py  --i SO2
 # # for a csv file conatining multiple formulas: python getOS.py  --f formulas.csv
 
@@ -214,68 +279,3 @@
         
 # if __name__ == "__main__":
 #     main()
-
-# getOS.py
-# For predicting oxidation states from formula or CSV using guess_os() from bertos.py
-
-import sys
-import os
-import argparse
-import pandas as pd
-from pymatgen.core.composition import Composition
-
-# Add model folder to path so we can import guess_os
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "BERTOS")))
-from bertos import guess_os
-
-
-def parse_args():
-    parser = argparse.ArgumentParser(description="Predict oxidation states using BERTOS")
-    parser.add_argument("--i", type=str, help="Input formula")
-    parser.add_argument("--f", type=str, help="CSV file with formulas (one per row)")
-    #✅ Accept this extra argument so subprocess won't fail
-    parser.add_argument(
-        "--model_name_or_path",
-        type=str,
-        default=None,
-        help="(Unused) Included to support external CLI calls."
-    )
-    return parser.parse_args()
-
-
-def main():
-    args = parse_args()
-
-    if args.i and args.f:
-        print("❌ Please provide only one of --i (formula) or --f (CSV file), not both.")
-        return
-
-    if args.i:
-        formula = args.i.strip()
-        print(f"Input formula -------> {formula}")
-        os_result = guess_os(formula)
-        print("Predicted Oxidation States:")
-        for elem, ox in os_result.items():
-            print(f"{elem}: {ox}")
-
-    elif args.f:
-        print(f"Input file -------> {args.f}")
-        df = pd.read_csv(args.f, header=None)
-        formulas = df[0]
-        all_results = []
-
-        for formula in formulas:
-            os_result = guess_os(formula)
-            formatted = " ".join(f"{k}({v:+})" for k, v in os_result.items())
-            all_results.append(formatted)
-
-        out_file = ".".join(args.f.split(".")[:-1]) + "_OS." + args.f.split(".")[-1]
-        pd.DataFrame(all_results).to_csv(out_file, header=None, index=None)
-        print(f"Output file ------> {out_file}")
-
-    else:
-        print("❗ Please provide a formula (--i) or a CSV file (--f) as input.")
-
-
-if __name__ == "__main__":
-    main()
